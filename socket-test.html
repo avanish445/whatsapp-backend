@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhatsApp Socket.IO Test Client</title>
+  <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      padding: 30px;
+    }
+
+    .user-panel {
+      background: #f8f9fa;
+      border-radius: 15px;
+      padding: 25px;
+      border: 2px solid #e9ecef;
+    }
+
+    .user-panel h2 {
+      color: #667eea;
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+      color: #495057;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: transform 0.2s, box-shadow 0.2s;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .status {
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .status.connected {
+      background: #d4edda;
+      color: #155724;
+      border: 2px solid #c3e6cb;
+    }
+
+    .status.disconnected {
+      background: #f8d7da;
+      color: #721c24;
+      border: 2px solid #f5c6cb;
+    }
+
+    .messages {
+      background: white;
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+      padding: 15px;
+      height: 300px;
+      overflow-y: auto;
+      margin-top: 15px;
+    }
+
+    .message {
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      background: #e9ecef;
+      border-left: 4px solid #667eea;
+    }
+
+    .message.sent {
+      background: #d4edda;
+      border-left-color: #28a745;
+    }
+
+    .message.received {
+      background: #cce5ff;
+      border-left-color: #004085;
+    }
+
+    .message .time {
+      font-size: 11px;
+      color: #6c757d;
+      margin-top: 5px;
+    }
+
+    .instructions {
+      grid-column: 1 / -1;
+      background: #fff3cd;
+      border: 2px solid #ffc107;
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+
+    .instructions h3 {
+      color: #856404;
+      margin-bottom: 10px;
+    }
+
+    .instructions ol {
+      margin-left: 20px;
+      color: #856404;
+    }
+
+    .instructions li {
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔌 WhatsApp Socket.IO Test Client</h1>
+      <p>Real-time messaging test interface</p>
+    </div>
+
+    <div class="content">
+      <!-- User 1 Panel -->
+      <div class="user-panel">
+        <h2>👤 User 1 (Alice)</h2>
+        <div id="status1" class="status disconnected">❌ Disconnected</div>
+        
+        <div class="form-group">
+          <label>Token:</label>
+          <input type="text" id="token1" placeholder="Paste JWT token here">
+        </div>
+        
+        <div class="form-group">
+          <label>User ID:</label>
+          <input type="text" id="userId1" placeholder="Paste user ID here">
+        </div>
+        
+        <button onclick="connectUser1()">Connect</button>
+        
+        <div class="form-group" style="margin-top: 20px;">
+          <label>Receiver ID (User 2):</label>
+          <input type="text" id="receiverId1" placeholder="User 2 ID">
+        </div>
+        
+        <div class="form-group">
+          <label>Message:</label>
+          <textarea id="message1" rows="3" placeholder="Type your message..."></textarea>
+        </div>
+        
+        <button onclick="sendMessage1()">Send Message</button>
+        
+        <div class="messages" id="messages1"></div>
+      </div>
+
+      <!-- User 2 Panel -->
+      <div class="user-panel">
+        <h2>👤 User 2 (Bob)</h2>
+        <div id="status2" class="status disconnected">❌ Disconnected</div>
+        
+        <div class="form-group">
+          <label>Token:</label>
+          <input type="text" id="token2" placeholder="Paste JWT token here">
+        </div>
+        
+        <div class="form-group">
+          <label>User ID:</label>
+          <input type="text" id="userId2" placeholder="Paste user ID here">
+        </div>
+        
+        <button onclick="connectUser2()">Connect</button>
+        
+        <div class="form-group" style="margin-top: 20px;">
+          <label>Receiver ID (User 1):</label>
+          <input type="text" id="receiverId2" placeholder="User 1 ID">
+        </div>
+        
+        <div class="form-group">
+          <label>Message:</label>
+          <textarea id="message2" rows="3" placeholder="Type your message..."></textarea>
+        </div>
+        
+        <button onclick="sendMessage2()">Send Message</button>
+        
+        <div class="messages" id="messages2"></div>
+      </div>
+
+      <!-- Instructions -->
+      <div class="instructions">
+        <h3>📝 How to Use:</h3>
+        <ol>
+          <li>First, register two users using the API (POST /auth/register)</li>
+          <li>Copy the JWT tokens and user IDs from the registration response</li>
+          <li>Paste them into the respective fields above</li>
+          <li>Click "Connect" for both users</li>
+          <li>Enter the receiver's ID in each panel</li>
+          <li>Type a message and click "Send Message"</li>
+          <li>Watch real-time messages appear in both panels!</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let socket1, socket2;
+
+    function connectUser1() {
+      const token = document.getElementById('token1').value;
+      const userId = document.getElementById('userId1').value;
+
+      if (!token || !userId) {
+        alert('Please enter both token and user ID');
+        return;
+      }
+
+      socket1 = io('http://localhost:3000');
+
+      socket1.on('connect', () => {
+        console.log('User 1 socket connected');
+        socket1.emit('join', { token, userId });
+      });
+
+      socket1.on('joined', (data) => {
+        console.log('User 1 joined:', data);
+        document.getElementById('status1').className = 'status connected';
+        document.getElementById('status1').textContent = '✅ Connected';
+        addMessage('messages1', 'System: Connected successfully', 'sent');
+      });
+
+      socket1.on('receiveMessage', (data) => {
+        console.log('User 1 received message:', data);
+        addMessage('messages1', `From ${data.data.senderId.username}: ${data.data.text}`, 'received');
+      });
+
+      socket1.on('messageSent', (data) => {
+        console.log('User 1 message sent:', data);
+        addMessage('messages1', `You: ${data.data.text}`, 'sent');
+      });
+
+      socket1.on('error', (data) => {
+        console.error('User 1 error:', data);
+        alert('Error: ' + data.message);
+      });
+    }
+
+    function connectUser2() {
+      const token = document.getElementById('token2').value;
+      const userId = document.getElementById('userId2').value;
+
+      if (!token || !userId) {
+        alert('Please enter both token and user ID');
+        return;
+      }
+
+      socket2 = io('http://localhost:3000');
+
+      socket2.on('connect', () => {
+        console.log('User 2 socket connected');
+        socket2.emit('join', { token, userId });
+      });
+
+      socket2.on('joined', (data) => {
+        console.log('User 2 joined:', data);
+        document.getElementById('status2').className = 'status connected';
+        document.getElementById('status2').textContent = '✅ Connected';
+        addMessage('messages2', 'System: Connected successfully', 'sent');
+      });
+
+      socket2.on('receiveMessage', (data) => {
+        console.log('User 2 received message:', data);
+        addMessage('messages2', `From ${data.data.senderId.username}: ${data.data.text}`, 'received');
+      });
+
+      socket2.on('messageSent', (data) => {
+        console.log('User 2 message sent:', data);
+        addMessage('messages2', `You: ${data.data.text}`, 'sent');
+      });
+
+      socket2.on('error', (data) => {
+        console.error('User 2 error:', data);
+        alert('Error: ' + data.message);
+      });
+    }
+
+    function sendMessage1() {
+      const token = document.getElementById('token1').value;
+      const senderId = document.getElementById('userId1').value;
+      const receiverId = document.getElementById('receiverId1').value;
+      const text = document.getElementById('message1').value;
+
+      if (!socket1) {
+        alert('Please connect first');
+        return;
+      }
+
+      if (!receiverId || !text) {
+        alert('Please enter receiver ID and message');
+        return;
+      }
+
+      socket1.emit('sendMessage', {
+        token,
+        senderId,
+        receiverId,
+        text
+      });
+
+      document.getElementById('message1').value = '';
+    }
+
+    function sendMessage2() {
+      const token = document.getElementById('token2').value;
+      const senderId = document.getElementById('userId2').value;
+      const receiverId = document.getElementById('receiverId2').value;
+      const text = document.getElementById('message2').value;
+
+      if (!socket2) {
+        alert('Please connect first');
+        return;
+      }
+
+      if (!receiverId || !text) {
+        alert('Please enter receiver ID and message');
+        return;
+      }
+
+      socket2.emit('sendMessage', {
+        token,
+        senderId,
+        receiverId,
+        text
+      });
+
+      document.getElementById('message2').value = '';
+    }
+
+    function addMessage(containerId, text, type) {
+      const container = document.getElementById(containerId);
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${type}`;
+      
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString();
+      
+      messageDiv.innerHTML = `
+        <div>${text}</div>
+        <div class="time">${timeStr}</div>
+      `;
+      
+      container.appendChild(messageDiv);
+      container.scrollTop = container.scrollHeight;
+    }
+  </script>
+</body>
+</html>
